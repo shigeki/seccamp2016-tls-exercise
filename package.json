@@ -1,0 +1,25 @@
+{
+  "name": "seccamp2016-tls-exercise",
+  "version": "0.0.1",
+  "description": "Security Camp 2016 TLS Exercise",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shigeki/seccamp2016-tls-exercise.git"
+  },
+  "keywords": [
+    "seccamp2016"
+  ],
+  "author": "Shigeki Ohtsu <ohtsu@iij.ad.jp>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/shigeki/seccamp2016-tls-exercise/issues"
+  },
+  "homepage": "https://github.com/shigeki/seccamp2016-tls-exercise#readme",
+  "dependencies": {
+    "asn1.js-rfc5280": "^1.0.3"
+  }
+}
