@@ -5,12 +5,23 @@ const ChaCha20Poly1305 = require('../lib/chacha20_poly1305.js').ChaCha20Poly1305
 const PRF12 = TLS.PRF12;
 const Sample = require('./sample_data.js').Sample;
 
+function BufferXOR(a, b) {
+  assert(Buffer.isBuffer(a));
+  assert(Buffer.isBuffer(b));
+  assert(a.length === b.length);
+  var c = new Buffer(a.length);
+  for(var i = 0; i < a.length; i++) {
+    c[i] = a[i] ^ b[i];
+  }
+  return c;
+}
+
 describe('ChangeCipherSpec', function() {
   const ccs_obj = { ContentType: new Buffer('14', 'hex'),
                     ProtocolVersion: new Buffer('0303', 'hex'),
                     Length: new Buffer('0001', 'hex'),
                     ChangeCipherSpecMessage: new Buffer('01', 'hex')};
-  const ccs = new TLS.ChangeCipherSpec();
+  const ccs = TLS.ChangeCipherSpec;
   it('decode', function() {
     var rand = crypto.randomBytes(32);
     const obj = ccs.decode(Buffer.concat([Sample.ChangeCipherSpec, rand]));
@@ -35,7 +46,7 @@ describe('Handshake', function() {
                                   Length: new Buffer('000000', 'hex')
                                 }
                                };
-    const hello_request = new TLS.Handshake.HelloRequest();
+    const hello_request = TLS.Handshake.HelloRequest;
     it('decode', function() {
       var rand = crypto.randomBytes(32);
       const obj = hello_request.decode(Buffer.concat([Sample.HelloRequest, rand]));
@@ -53,7 +64,7 @@ describe('Handshake', function() {
   });
 
   describe('ClientHello', function() {
-    const client_hello = new TLS.Handshake.ClientHello();
+    const client_hello = TLS.Handshake.ClientHello;
     it('decode', function() {
       var rand = crypto.randomBytes(32);
       const obj = client_hello.decode(Buffer.concat([Sample.ClientHello, rand]));
@@ -67,7 +78,7 @@ describe('Handshake', function() {
   });
 
   describe('ServerHello', function() {
-    const server_hello = new TLS.Handshake.ServerHello();
+    const server_hello = TLS.Handshake.ServerHello;
     it('encode', function() {
       var rand = crypto.randomBytes(32);
       const obj = server_hello.decode(Buffer.concat([Sample.ServerHello, rand]));
@@ -81,7 +92,7 @@ describe('Handshake', function() {
   });
 
   describe('Certificate', function() {
-    const certificate = new TLS.Handshake.Certificate();
+    const certificate = TLS.Handshake.Certificate;
     it('encode', function() {
       var rand = crypto.randomBytes(32);
       const obj = certificate.decode(Buffer.concat([Sample.Certificate, rand]));
@@ -95,7 +106,7 @@ describe('Handshake', function() {
   });
 
   describe('ServerKeyExchange', function() {
-    const server_key_exchange = new TLS.Handshake.ServerKeyExchange();
+    const server_key_exchange = TLS.Handshake.ServerKeyExchange;
     it('encode', function() {
       var rand = crypto.randomBytes(32);
       const obj = server_key_exchange.decode(Buffer.concat([Sample.ServerKeyExchange, rand]));
@@ -109,7 +120,7 @@ describe('Handshake', function() {
   });
 
   describe('ServerHelloDone', function() {
-    const server_hello_done = new TLS.Handshake.ServerHelloDone();
+    const server_hello_done = TLS.Handshake.ServerHelloDone;
     it('encode', function() {
       var rand = crypto.randomBytes(32);
       const obj = server_hello_done.decode(Buffer.concat([Sample.ServerHelloDone, rand]));
@@ -124,7 +135,7 @@ describe('Handshake', function() {
 
 
   describe('ClientKeyExchange', function() {
-    const client_key_exchange = new TLS.Handshake.ClientKeyExchange();
+    const client_key_exchange = TLS.Handshake.ClientKeyExchange;
     it('encode', function() {
       var rand = crypto.randomBytes(32);
       const obj = client_key_exchange.decode(Buffer.concat([Sample.ClientKeyExchange, rand]));
@@ -139,8 +150,8 @@ describe('Handshake', function() {
 
   describe('MasterSecret KeyBlock', function() {
     it('PRF12', function() {
-      const client_hello = (new TLS.Handshake.ClientHello()).decode(Sample.ClientHello);
-      const server_hello = (new TLS.Handshake.ServerHello()).decode(Sample.ServerHello);
+      const client_hello = TLS.Handshake.ClientHello.decode(Sample.ClientHello);
+      const server_hello = TLS.Handshake.ServerHello.decode(Sample.ServerHello);
       var seed = Buffer.concat([client_hello.Handshake.Random, server_hello.Handshake.Random]);
       var master_secret = PRF12("sha256", Sample.PreMasterSecret, "master secret", seed, 48);
       assert(Sample.MasterSecret.equals(master_secret));
@@ -187,15 +198,3 @@ describe('Handshake', function() {
     });
   });
 });
-
-
-function BufferXOR(a, b) {
-  assert(Buffer.isBuffer(a));
-  assert(Buffer.isBuffer(b));
-  assert(a.length === b.length);
-  var c = new Buffer(a.length);
-  for(var i = 0; i < a.length; i++) {
-    c[i] = a[i] ^ b[i];
-  }
-  return c;
-}
