@@ -150,22 +150,16 @@ describe('Handshake', function() {
 
   describe('MasterSecret KeyBlock', function() {
     it('PRF12', function() {
-      const client_hello = TLS.Handshake.ClientHello.decode(Sample.ClientHello);
-      const server_hello = TLS.Handshake.ServerHello.decode(Sample.ServerHello);
-      var seed = Buffer.concat([client_hello.Handshake.Random, server_hello.Handshake.Random]);
-      var master_secret = PRF12("sha256", Sample.PreMasterSecret, "master secret", seed, 48);
+      const client_random = TLS.Handshake.ClientHello.decode(Sample.ClientHello).Handshake.Random;
+      const server_random = TLS.Handshake.ServerHello.decode(Sample.ServerHello).Handshake.Random;
+      var master_secret = TLS.DeriveMasterSecret(Sample.PreMasterSecret, client_random, server_random);
       assert(Sample.MasterSecret.equals(master_secret));
-      seed = Buffer.concat([server_hello.Handshake.Random, client_hello.Handshake.Random]);
-      var key_block = PRF12("sha256", master_secret, "key expansion", seed, 88);
-      assert(Sample.KeyBlock.equals(key_block));
-      var client_write_key = key_block.slice(0, 32);
-      assert(Sample.ClientWriteKey.equals(client_write_key));
-      var server_write_key = key_block.slice(32, 64);
-      assert(Sample.ServerWriteKey.equals(server_write_key));
-      var client_write_iv = key_block.slice(64, 76);
-      assert(Sample.ClientWriteIV.equals(client_write_iv));
-      var server_write_iv = key_block.slice(76, 88);
-      assert(Sample.ServerWriteIV.equals(server_write_iv));
+
+      var key_block = TLS.DeriveKeyBlock("chacha20", master_secret, client_random, server_random);
+      assert(Sample.ClientWriteKey.equals(key_block.client_write_key));
+      assert(Sample.ServerWriteKey.equals(key_block.server_write_key));
+      assert(Sample.ClientWriteIV.equals(key_block.client_write_iv));
+      assert(Sample.ServerWriteIV.equals(key_block.server_write_iv));
     });
   });
 
@@ -182,7 +176,7 @@ describe('Handshake', function() {
       var shasum = crypto.createHash('sha256');
       shasum.update(handshake_buf);
       var handshake_hash = shasum.digest();
-      var client_verified_data = PRF12("sha256", Sample.MasterSecret, "client finished", handshake_hash, 12);
+      var client_verified_data = PRF12(Sample.MasterSecret, "client finished", handshake_hash, 12);
       var seq = new Buffer('0000000000000000', 'hex');
       var handshake_header = new Buffer('1400000C', 'hex');
       var nonce = BufferXOR(Buffer.concat([seq, new Buffer('00000000', 'hex')]), Sample.ClientWriteIV);
