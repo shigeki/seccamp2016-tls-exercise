@@ -8,6 +8,18 @@ const PRF12 = TLS.PRF12;
 const Sample1 = require('./sample_data.js').Sample;
 const Sample2 = require('./sample_data2.js').Sample;
 
+
+function incSeq(buf) {
+  for (var i = buf.length - 1; i >= 0; i--) {
+    if (buf[i] < 0xff) {
+      buf[i]++;
+      break;
+    }
+    buf[i] = 0x00;
+  }
+}
+
+
 function BufferXOR(a, b) {
   assert(Buffer.isBuffer(a));
   assert(Buffer.isBuffer(b));
@@ -309,6 +321,24 @@ describe('Handshake', function() {
                 };
       var buf = TLS.Handshake.Finished.encode(obj, "chacha20", Sample.ServerWriteKey, Sample.ServerWriteIV);
       assert(Sample.ServerFinished.equals(buf));
+    });
+  });
+  describe('ApplicationData', function() {
+    it('ClientEncryptedApplicationData', function() {
+      var seq = new Buffer('0000000000000000', 'hex');
+      for(var i = 0 ; i < Sample.ClientEncryptedApplicationData.length; i++) {
+        incSeq(seq);
+        var obj = TLS.ApplicationData.decode(Sample.ClientEncryptedApplicationData[i], "chacha20",  Sample.ClientWriteKey, Sample.ClientWriteIV, seq);
+        assert(obj.ApplicationData.Plaintext.equals(Sample.ClientPlainApplicationData[i]));
+      }
+    });
+    it('ServerEncryptedApplicationData', function() {
+      var seq = new Buffer('0000000000000000', 'hex');
+      for(var i = 0 ; i < Sample.ServerEncryptedApplicationData.length; i++) {
+        incSeq(seq);
+        var obj = TLS.ApplicationData.decode(Sample.ServerEncryptedApplicationData[i], "chacha20",  Sample.ServerWriteKey, Sample.ServerWriteIV, seq);
+        assert(obj.ApplicationData.Plaintext.equals(Sample.ServerPlainApplicationData[i]));
+      }
     });
   });
 });

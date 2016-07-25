@@ -14,8 +14,15 @@ exports.Sample = {
     new Buffer('1703030020e30acd58836124618a4383c883b7f64475e2dfeb9090b2744c02140d881a08f9', 'hex'),
     new Buffer('1703030011d40a702fad163f88110f452cae5ef71bff', 'hex')
   ],
+  ClientPlainApplicationData: [
+    new Buffer('HEAD / HTTP/1.0\n', 'utf8'),
+    new Buffer('\n', 'utf8')
+  ],
   ServerEncryptedApplicationData: [
     new Buffer('17030301312f04ee684267fe299998ecadcdf696795468d8d07c7508d4cd25ab61b3c07ab1cc9593af7701a8f4527b7beca6eda674e5b06ca91c4e57592886838e38efaef80f8cff9fddac884ff6c86b4535baf5d0529d35ae6774b361ea4d873a0e4b6b59f8a485096f0d47f2bce3731bff730826da2209e5dbfeff2fe7c971b0c90de77e1433374965249d8a40f23ab438a050f783a648e74f5d190bd396457aa3768de4821f9cb18b5b18e690c2b8f6d70eb5e8d4920af3e8621eae71986dbb1a95661857da1a506561cd0b6f98e68e48f59bb74ce4046fab90f3a39930fc9267f413cfb80af22564705c285abcfb944760668b737d578210306db219789f0b681f758b44c3150cdd387fd927c4b02397afc765e08d888830c0c3e9d80aa7243e938bb3cc0c5f9c8b76a5f19c9d0986767160b6d3', 'hex')
+  ],
+  ServerPlainApplicationData: [
+    new Buffer('HTTP/1.1 200 OK\r\nServer: nginx\r\nDate: Sat, 23 Jul 2016 09:55:53 GMT\r\nContent-Type: text/html\r\nContent-Length: 215\r\nLast-Modified: Thu, 04 Jul 2013 13:55:54 GMT\r\nConnection: close\r\nETag: "51d57eea-d7"\r\nStrict-Transport-Security: max-age=15768000; includeSubdomains\r\nAccept-Ranges: bytes\r\n\r\n', 'utf8')
   ],
   PreMasterSecret: new Buffer('c88dbde80e860b33147abf21aecdbb0ec0d27dc0598f7ac58a0f26d58f065ad1', 'hex'),
   MasterSecret: new Buffer('de27d9e2d1d728874abf4e42902bd7fa8dc7de2ad8c867fe850584df18e91d9db3257d3fc806a75d580e99aa16775026', 'hex'),

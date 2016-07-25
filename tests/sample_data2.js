@@ -13,8 +13,15 @@ exports.Sample = {
     new Buffer('170303001fa26d9c6c603b72fdb43f870ca6490efd25bcbaef0d08bf87f107cf21a8cb9e', 'hex'),
     new Buffer('17030300119328141f7426184ce25c0e54cfbb661398', 'hex')
   ],
+  ClientPlainApplicationData: [
+    new Buffer('GET / HTTP/1.0\n', 'utf8'),
+    new Buffer('\n', 'utf8')
+  ],
   ServerEncryptedApplicationData: [
     new Buffer('17030300814eed80130d46a6190c2a175b5d944fe4b15c0e632f5bc527f87473bdcb270b89d770da7d885426c34cf8a7422c2235ab41a2780bb310960aea5fecb11f4cca1631cb58b638447e281e4fe25ece07bef7c1517c6711ec1a5ed66df774d52bcf6aba1432b697a67b64514b223bc6de6b1b66c8b779180b9b5060a4c6497f9af01fb6', 'hex')
+  ],
+  ServerPlainApplicationData: [
+    new Buffer('HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nDate: Mon, 25 Jul 2016 10:25:59 GMT\r\nConnection: close\r\n\r\nHello World\n', 'utf8')
   ],
   PreMasterSecret: new Buffer('c189ff663c6b9c87cbb9b817f37564283eb3bc8057a34e2b6805789307e9637a', 'hex'),
   MasterSecret: new Buffer('5D843A07D62A96A876AC008877942B136BA020D2148580C51E483A5ED3E1874B2F9A19FAB2B314EBC66DE447D5E28368', 'hex'),
