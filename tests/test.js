@@ -165,7 +165,7 @@ describe('Handshake', function() {
     });
   });
 
-  describe('Finished', function() {
+  describe('ClientFinished', function() {
     it("ClientFinished", function() {
       var handshake_buf = Buffer.concat([
         Sample.ClientHello.slice(5),
@@ -233,4 +233,89 @@ describe('Handshake', function() {
       assert(Sample.ClientFinished.equals(buf));
     });
   });
+
+
+  describe('ServerFinished', function() {
+    it("ServerFinished", function() {
+      var obj = TLS.Handshake.Finished.decode(Sample.ClientFinished, "chacha20", Sample.ClientWriteKey, Sample.ClientWriteIV);
+      var Unencrypted_ClientFinished = Buffer.concat([obj.Handshake.HandshakeType, obj.Handshake.Length, obj.Handshake.VerifyData]);
+      var handshake_buf = Buffer.concat([
+        Sample.ClientHello.slice(5),
+        Sample.ServerHello.slice(5),
+        Sample.Certificate.slice(5),
+        Sample.ServerKeyExchange.slice(5),
+        Sample.ServerHelloDone.slice(5),
+        Sample.ClientKeyExchange.slice(5),
+        Unencrypted_ClientFinished
+      ]);
+      var shasum = crypto.createHash('sha256');
+      shasum.update(handshake_buf);
+      var handshake_hash = shasum.digest();
+      var server_verified_data = PRF12(Sample.MasterSecret, "server finished", handshake_hash, 12);
+      var seq = new Buffer('0000000000000000', 'hex');
+      var handshake_header = new Buffer('1400000C', 'hex');
+      var nonce = BufferXOR(Buffer.concat([seq, new Buffer('00000000', 'hex')]), Sample.ServerWriteIV);
+      var unencrypted_record_header = new Buffer('1603030000', 'hex');
+      unencrypted_record_header.writeUInt16BE(handshake_header.length+server_verified_data.length, 3);
+      var aad = Buffer.concat([seq, unencrypted_record_header]);
+      var cipher= ChaCha20Poly1305Encrypt(aad, Sample.ServerWriteKey, nonce, Buffer.concat([handshake_header, server_verified_data]));
+      var encrypted_server_verified_data = Buffer.concat([cipher.ciphertext, cipher.tag]);
+      var encrypted_record_header = new Buffer('1603030000', 'hex');
+      encrypted_record_header.writeUInt16BE(encrypted_server_verified_data.length, 3);
+      var server_finished = Buffer.concat([encrypted_record_header, encrypted_server_verified_data]);
+      console.log('hoge', Sample.ServerFinished);
+      console.log('foo0', server_finished);
+//      assert(Sample.ServerFinished.equals(server_finished));
+    });
+    it("ServerFinishedDecode", function() {
+      var o = TLS.Handshake.Finished.decode(Sample.ClientFinished, "chacha20", Sample.ClientWriteKey, Sample.ClientWriteIV);
+      console.log(o);
+      var Unencrypted_ClientFinished = Buffer.concat([o.Handshake.HandshakeType, o.Handshake.Length, o.Handshake.VerifyData]);
+      console.log(Unencrypted_ClientFinished);
+      console.log(Sample.NewSessionTicket.slice(5));
+
+      var handshake_buf = Buffer.concat([
+        Sample.ClientHello.slice(5),
+        Sample.ServerHello.slice(5),
+        Sample.Certificate.slice(5),
+        Sample.ServerKeyExchange.slice(5),
+        Sample.ServerHelloDone.slice(5),
+        Unencrypted_ClientFinished
+      ]);
+
+      var shasum = crypto.createHash('sha256');
+      shasum.update(handshake_buf);
+      var handshake_hash = shasum.digest();
+      var server_verify_data = PRF12(Sample.MasterSecret, "server finished", handshake_hash, 12);
+      console.log('calculated', server_verify_data);
+      var obj = TLS.Handshake.Finished.decode(Sample.ServerFinished, "chacha20", Sample.ServerWriteKey, Sample.ServerWriteIV);
+      console.log('  original', obj.Handshake.VerifyData);
+//      assert(server_verify_data.equals(obj.Handshake.VerifyData));
+    });
+    it.skip("ServerFinishedEncode", function() {
+      var handshake_buf = Buffer.concat([
+        Sample.ClientHello.slice(5),
+        Sample.ServerHello.slice(5),
+        Sample.Certificate.slice(5),
+        Sample.ServerKeyExchange.slice(5),
+        Sample.ServerHelloDone.slice(5),
+        Sample.ClientKeyExchange.slice(5),
+        Sample.ClientKeyFinished.slice(5)
+      ]);
+      var shasum = crypto.createHash('sha256');
+      shasum.update(handshake_buf);
+      var handshake_hash = shasum.digest();
+      var server_verified_data = PRF12(Sample.MasterSecret, "server finished", handshake_hash, 12);
+      var obj = { ContentType: new Buffer('16', 'hex'),
+                  ProtocolVersion: new Buffer('0303', 'hex'),
+                  Length: new Buffer('0010', 'hex'),
+                  Handshake: { HandshakeType: new Buffer('14', 'hex'),
+                               Length: new Buffer('00000c', 'hex'),
+                               VerifyData: server_verified_data}
+                };
+      var buf = TLS.Handshake.Finished.encode(obj, "chacha20", Sample.ServerWriteKey, Sample.ServerWriteIV);
+      assert(Sample.ServerFinished.equals(buf));
+    });
+  });
+
 });
