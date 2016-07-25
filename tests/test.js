@@ -1,7 +1,9 @@
 const assert = require('assert');
 const crypto = require('crypto');
 const TLS = require('../index.js').TLS;
-const ChaCha20Poly1305 = require('../lib/chacha20_poly1305.js').ChaCha20Poly1305;
+const ChaCha20Poly1305 = require('../lib/crypto/chacha20_poly1305.js');
+const ChaCha20Poly1305Encrypt = ChaCha20Poly1305.ChaCha20Poly1305Encrypt;
+const ChaCha20Poly1305Decrypt = ChaCha20Poly1305.ChaCha20Poly1305Decrypt;
 const PRF12 = TLS.PRF12;
 const Sample = require('./sample_data.js').Sample;
 
@@ -183,12 +185,52 @@ describe('Handshake', function() {
       var unencrypted_record_header = new Buffer('1603030000', 'hex');
       unencrypted_record_header.writeUInt16BE(handshake_header.length+client_verified_data.length, 3);
       var aad = Buffer.concat([seq, unencrypted_record_header]);
-      var cipher= ChaCha20Poly1305(aad, Sample.ClientWriteKey, nonce, Buffer.concat([handshake_header, client_verified_data]));
+      var cipher= ChaCha20Poly1305Encrypt(aad, Sample.ClientWriteKey, nonce, Buffer.concat([handshake_header, client_verified_data]));
       var encrypted_client_verified_data = Buffer.concat([cipher.ciphertext, cipher.tag]);
       var encrypted_record_header = new Buffer('1603030000', 'hex');
       encrypted_record_header.writeUInt16BE(encrypted_client_verified_data.length, 3);
       var client_finished = Buffer.concat([encrypted_record_header, encrypted_client_verified_data]);
       assert(Sample.ClientFinished.equals(client_finished));
+    });
+    it("ClientFinishedDecode", function() {
+      var handshake_buf = Buffer.concat([
+        Sample.ClientHello.slice(5),
+        Sample.ServerHello.slice(5),
+        Sample.Certificate.slice(5),
+        Sample.ServerKeyExchange.slice(5),
+        Sample.ServerHelloDone.slice(5),
+        Sample.ClientKeyExchange.slice(5)
+      ]);
+      var shasum = crypto.createHash('sha256');
+      shasum.update(handshake_buf);
+      var handshake_hash = shasum.digest();
+      var client_verify_data = PRF12(Sample.MasterSecret, "client finished", handshake_hash, 12);
+
+      var obj = TLS.Handshake.Finished.decode(Sample.ClientFinished, "chacha20", Sample.ClientWriteKey, Sample.ClientWriteIV);
+      assert(client_verify_data.equals(obj.Handshake.VerifyData));
+    });
+    it("ClientFinishedEncode", function() {
+      var handshake_buf = Buffer.concat([
+        Sample.ClientHello.slice(5),
+        Sample.ServerHello.slice(5),
+        Sample.Certificate.slice(5),
+        Sample.ServerKeyExchange.slice(5),
+        Sample.ServerHelloDone.slice(5),
+        Sample.ClientKeyExchange.slice(5)
+      ]);
+      var shasum = crypto.createHash('sha256');
+      shasum.update(handshake_buf);
+      var handshake_hash = shasum.digest();
+      var client_verified_data = PRF12(Sample.MasterSecret, "client finished", handshake_hash, 12);
+      var obj = { ContentType: new Buffer('16', 'hex'),
+                  ProtocolVersion: new Buffer('0303', 'hex'),
+                  Length: new Buffer('0010', 'hex'),
+                  Handshake: { HandshakeType: new Buffer('14', 'hex'),
+                               Length: new Buffer('00000c', 'hex'),
+                               VerifyData: client_verified_data}
+                };
+      var buf = TLS.Handshake.Finished.encode(obj, "chacha20", Sample.ClientWriteKey, Sample.ClientWriteIV);
+      assert(Sample.ClientFinished.equals(buf));
     });
   });
 });
