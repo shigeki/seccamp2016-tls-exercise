@@ -120,6 +120,7 @@ function Test(Sample) {
       it('encode', function() {
         var rand = crypto.randomBytes(32);
         const obj = server_hello_done.decode(Buffer.concat([Sample.ServerHelloDone, rand]));
+        console.log(obj);
       });
       it('decode', function() {
         var rand = crypto.randomBytes(32);
