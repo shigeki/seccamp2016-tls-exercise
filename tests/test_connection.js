@@ -20,11 +20,18 @@ function Test(Sample) {
       connection.on('frame', function(frame, type) {
         assert(Sample[type].equals(frame));
       });
+      connection.on('clearText', function(data) {
+        assert(data.equals(Sample.ClientPlainApplicationData.shift()));
+      });
       var ret = connection.read(Sample.ClientHello, function(e) {
         connection.read(Sample.ClientKeyExchange, function(e) {
           connection.read(Sample.ChangeCipherSpec, function(e) {
             connection.read(Sample.ClientFinished, function(e) {
-              console.log('DONE!');
+              connection.read(Sample.ClientEncryptedApplicationData[0], function(e) {
+                connection.read(Sample.ClientEncryptedApplicationData[1], function(e) {
+                  console.log('DONE!');
+                });
+              });
             });
           });
         });
