@@ -120,7 +120,6 @@ function Test(Sample) {
       it('encode', function() {
         var rand = crypto.randomBytes(32);
         const obj = server_hello_done.decode(Buffer.concat([Sample.ServerHelloDone, rand]));
-        console.log(obj);
       });
       it('decode', function() {
         var rand = crypto.randomBytes(32);
@@ -284,7 +283,6 @@ function Test(Sample) {
         var handshake_hash = shasum.digest();
         var server_verify_data = PRF12(Sample.MasterSecret, "server finished", handshake_hash, 12);
         var obj = TLS.Handshake.Finished.decode(Sample.ServerFinished, "chacha20", Sample.ServerWriteKey, Sample.ServerWriteIV);
-        console.log(obj);
         assert(server_verify_data.equals(obj.Handshake.VerifyData));
       });
       it("ServerFinishedEncode", function() {
