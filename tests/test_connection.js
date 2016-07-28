@@ -5,11 +5,23 @@ const TLS = require('../lib/tls.js').TLS;
 const Sample1 = require('./sample_data.js').Sample;
 const Sample2 = require('./sample_data2.js').Sample;
 const Connection = require('../lib/connection.js').Connection;
+const Dummy = require('./dummy_create_frame.js');
+
+function addDummy(connection) {
+  connection.createServerHello = Dummy.createServerHello;
+  connection.createCertificate = Dummy.createCertificate;
+  connection.createServerKeyExchange = Dummy.createServerKeyExchange;
+  connection.createServerHelloDone = Dummy.createServerHelloDone;
+  connection.createChangeCipherSpec = Dummy.createChangeCipherSpec;
+  connection.createServerFinished = Dummy.createServerFinished;
+}
+
 
 function Test(Sample) {
   describe('TLS Server State', function() {
     it('TLS_ST_BEFORE=>TLS_ST_OK', function() {
       var connection = new Connection(true);
+      addDummy(connection);
       connection.client_write_key = Sample.ClientWriteKey;
       connection.server_write_key = Sample.ServerWriteKey;
       connection.client_write_iv = Sample.ClientWriteIV;
