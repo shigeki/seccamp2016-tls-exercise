@@ -109,7 +109,7 @@ function Test(Sample) {
       ConnectionRead();
     });
   });
-  describe.only('ClientTest', function() {
+  describe.skip('ClientTest', function() {
     var client_connection = new Connection(false);
     var client_hello_obj = client_connection.createClientHello();
     var client_hello_buf = TLS.Handshake.ClientHello.encode(client_hello_obj);
@@ -122,10 +122,10 @@ function Test(Sample) {
         var change_cipher_spec_buf = TLS.ChangeCipherSpec.encode();
         server_connection.read(change_cipher_spec_buf, function(e) {
           var client_finished_obj = client_connection.createClientFinished();
-          var client_finished_buf = TLS.Handshake.ClientFinished.encode(client_finished_obj);
-          server_connection.read(change_finished_buf, function(e) {
-            console.log('DONE');
-          });
+//          var client_finished_buf = TLS.Handshake.Finished.encode(client_finished_obj);
+//          server_connection.read(change_finished_buf, function(e) {
+//            console.log('DONE');
+//          });
         });
       });
     });
