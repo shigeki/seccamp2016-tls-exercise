@@ -45,7 +45,7 @@ function Test(Sample) {
             connection.read(Sample.ClientFinished, function(e) {
               connection.read(Sample.ClientEncryptedApplicationData[0], function(e) {
                 connection.read(Sample.ClientEncryptedApplicationData[1], function(e) {
-                  console.log('DONE!');
+                  console.log('DONE!', connection.state.constructor.name);
                 });
               });
             });
@@ -74,7 +74,19 @@ function Test(Sample) {
       });
       var ret = connection.read(Sample.HelloRequest, function(e) {
         connection.read(Sample.ServerHello, function(e) {
-          console.log('DONE');
+          connection.read(Sample.Certificate, function(e) {
+            connection.read(Sample.ServerKeyExchange, function(e) {
+              connection.read(Sample.ServerHelloDone, function(e) {
+                connection.read(Sample.ChangeCipherSpec, function(e) {
+                  connection.read(Sample.ServerFinished, function(e) {
+                    connection.read(Sample.ServerEncryptedApplicationData[0], function(e) {
+                      console.log('DONE', connection.state.constructor.name);
+                    });
+                  });
+                });
+              });
+            });
+          });
         });
       });
     });
