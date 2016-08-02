@@ -109,6 +109,27 @@ function Test(Sample) {
       ConnectionRead();
     });
   });
+  describe.only('ClientTest', function() {
+    var client_connection = new Connection(false);
+    var client_hello_obj = client_connection.createClientHello();
+    var client_hello_buf = TLS.Handshake.ClientHello.encode(client_hello_obj);
+    var server_connection = new Connection(true);
+    server_connection.setCertificates(require('./cert_data.js').Certificates);
+    server_connection.read(client_hello_buf, function(e) {
+      var client_key_exchange_obj = client_connection.createClientKeyExchange();
+      var client_key_exchange_buf = TLS.Handshake.ClientKeyExchange.encode(client_key_exchange_obj);
+      server_connection.read(client_key_exchange_buf, function(e) {
+        var change_cipher_spec_buf = TLS.ChangeCipherSpec.encode();
+        server_connection.read(change_cipher_spec_buf, function(e) {
+          var client_finished_obj = client_connection.createClientFinished();
+          var client_finished_buf = TLS.Handshake.ClientFinished.encode(client_finished_obj);
+          server_connection.read(change_finished_buf, function(e) {
+            console.log('DONE');
+          });
+        });
+      });
+    });
+  });
 }
 
 Test(Sample2);
