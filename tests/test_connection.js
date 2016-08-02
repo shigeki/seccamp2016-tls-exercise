@@ -8,11 +8,14 @@ const Connection = require('../lib/connection.js').Connection;
 const Dummy = require('./dummy_create_frame.js');
 
 function addDummy(connection) {
+  connection.createClientHello = Dummy.createClientHello;
   connection.createServerHello = Dummy.createServerHello;
   connection.createCertificate = Dummy.createCertificate;
   connection.createServerKeyExchange = Dummy.createServerKeyExchange;
   connection.createServerHelloDone = Dummy.createServerHelloDone;
   connection.createChangeCipherSpec = Dummy.createChangeCipherSpec;
+  connection.createClientKeyExchange = Dummy.createClientKeyExchange;
+  connection.createClientFinished = Dummy.createClientFinished;
   connection.createServerFinished = Dummy.createServerFinished;
 }
 
@@ -48,6 +51,28 @@ function Test(Sample) {
             });
           });
         });
+      });
+    });
+  });
+  describe.only('TLS Client State', function() {
+    it('TLS_ST_BEFORE=>TLS_ST_OK', function() {
+      var connection = new Connection(false);
+      addDummy(connection);
+      connection.client_write_key = Sample.ClientWriteKey;
+      connection.server_write_key = Sample.ServerWriteKey;
+      connection.client_write_iv = Sample.ClientWriteIV;
+      connection.server_write_iv = Sample.ServerWriteIV;
+      connection.on('error', function(e) {
+        console.log(e);
+      });
+      connection.on('frame', function(frame, type) {
+        assert(Sample[type].equals(frame));
+      });
+      var index = 0;
+      connection.on('clearText', function(data) {
+        assert(data.equals(Sample.ServerPlainApplicationData[index++]));
+      });
+      var ret = connection.read(Sample.HelloRequest, function(e) {
       });
     });
   });
