@@ -73,6 +73,9 @@ function Test(Sample) {
         assert(data.equals(Sample.ServerPlainApplicationData[index++]));
       });
       var ret = connection.read(Sample.HelloRequest, function(e) {
+        connection.read(Sample.ServerHello, function(e) {
+          console.log('DONE');
+        });
       });
     });
   });
