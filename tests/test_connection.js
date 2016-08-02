@@ -23,6 +23,19 @@ function addDummy(connection) {
 function Test(Sample) {
   describe('TLS Server State', function() {
     it('TLS_ST_BEFORE=>TLS_ST_OK', function() {
+      var tls_read_frames = [Sample.ClientHello,
+                             Sample.ServerHello,
+                             Sample.Certificate,
+                             Sample.ServerKeyExchange,
+                             Sample.ServerHelloDone,
+                             Sample.ClientKeyExchange,
+                             Sample.ChangeCipherSpec,
+                             Sample.ClientFinished,
+                             Sample.ChangeCipherSpec,
+                             Sample.ServerFinished,
+                             Sample.ClientEncryptedApplicationData[0],
+                             Sample.ClientEncryptedApplicationData[1]
+                            ];
       var connection = new Connection(true);
       addDummy(connection);
       connection.client_write_key = Sample.ClientWriteKey;
@@ -34,28 +47,39 @@ function Test(Sample) {
       });
       connection.on('frame', function(frame, type) {
         assert(Sample[type].equals(frame));
+        assert(tls_read_frames.shift().equals(frame));
       });
       var index = 0;
       connection.on('clearText', function(data) {
         assert(data.equals(Sample.ClientPlainApplicationData[index++]));
       });
-      var ret = connection.read(Sample.ClientHello, function(e) {
-        connection.read(Sample.ClientKeyExchange, function(e) {
-          connection.read(Sample.ChangeCipherSpec, function(e) {
-            connection.read(Sample.ClientFinished, function(e) {
-              connection.read(Sample.ClientEncryptedApplicationData[0], function(e) {
-                connection.read(Sample.ClientEncryptedApplicationData[1], function(e) {
-                  console.log('DONE!', connection.state.constructor.name);
-                });
-              });
-            });
-          });
+      function ConnectionRead() {
+        connection.read(tls_read_frames.shift(), function(e) {
+          if (tls_read_frames.length > 0) {
+            ConnectionRead();
+            return;
+          }
+          console.log('DONE', connection.state.constructor.name);
         });
-      });
+      }
+      ConnectionRead();
     });
   });
-  describe.only('TLS Client State', function() {
+  describe('TLS Client State', function() {
     it('TLS_ST_BEFORE=>TLS_ST_OK', function() {
+      var tls_read_frames = [Sample.HelloRequest,
+                             Sample.ClientHello,
+                             Sample.ServerHello,
+                             Sample.Certificate,
+                             Sample.ServerKeyExchange,
+                             Sample.ServerHelloDone,
+                             Sample.ClientKeyExchange,
+                             Sample.ChangeCipherSpec,
+                             Sample.ClientFinished,
+                             Sample.ChangeCipherSpec,
+                             Sample.ServerFinished,
+                             Sample.ServerEncryptedApplicationData[0]
+                            ];
       var connection = new Connection(false);
       addDummy(connection);
       connection.client_write_key = Sample.ClientWriteKey;
@@ -67,28 +91,22 @@ function Test(Sample) {
       });
       connection.on('frame', function(frame, type) {
         assert(Sample[type].equals(frame));
+        assert(tls_read_frames.shift().equals(frame));
       });
       var index = 0;
       connection.on('clearText', function(data) {
         assert(data.equals(Sample.ServerPlainApplicationData[index++]));
       });
-      var ret = connection.read(Sample.HelloRequest, function(e) {
-        connection.read(Sample.ServerHello, function(e) {
-          connection.read(Sample.Certificate, function(e) {
-            connection.read(Sample.ServerKeyExchange, function(e) {
-              connection.read(Sample.ServerHelloDone, function(e) {
-                connection.read(Sample.ChangeCipherSpec, function(e) {
-                  connection.read(Sample.ServerFinished, function(e) {
-                    connection.read(Sample.ServerEncryptedApplicationData[0], function(e) {
-                      console.log('DONE', connection.state.constructor.name);
-                    });
-                  });
-                });
-              });
-            });
-          });
+      function ConnectionRead() {
+        connection.read(tls_read_frames.shift(), function(e) {
+          if (tls_read_frames.length > 0) {
+            ConnectionRead();
+            return;
+          }
+          console.log('DONE', connection.state.constructor.name);
         });
-      });
+      }
+      ConnectionRead();
     });
   });
 }
