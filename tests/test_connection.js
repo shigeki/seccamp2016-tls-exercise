@@ -32,8 +32,9 @@ function Test(Sample) {
       connection.on('frame', function(frame, type) {
         assert(Sample[type].equals(frame));
       });
+      var index = 0;
       connection.on('clearText', function(data) {
-        assert(data.equals(Sample.ClientPlainApplicationData.shift()));
+        assert(data.equals(Sample.ClientPlainApplicationData[index++]));
       });
       var ret = connection.read(Sample.ClientHello, function(e) {
         connection.read(Sample.ClientKeyExchange, function(e) {

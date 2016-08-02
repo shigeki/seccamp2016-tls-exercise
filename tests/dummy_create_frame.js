@@ -1,4 +1,29 @@
 const Certificates = require('./cert_data.js').Certificates;
+exports.createClientHello = createClientHello;
+function createClientHello() {
+  return {
+    ContentType: new Buffer('16', 'hex'),
+    ProtocolVersion: new Buffer('0301', 'hex'),
+    Length: new Buffer('006d', 'hex'),
+    Handshake:
+    { HandshakeType: new Buffer('01', 'hex'),
+      Length: new Buffer('000069', 'hex'),
+      ProtocolVersion: new Buffer('0303', 'hex'),
+      Random: new Buffer('52b8baaf7028996cb7352c66a600b0ae3582a66c0214234517a76963cc932eff', 'hex'),
+      SessionID: new Buffer(0),
+      CipherSuites: [ new Buffer('cca8', 'hex'), Buffer('00ff', 'hex')],
+      CompressionMethods: new Buffer('00', 'hex'),
+      Extensions: [
+        { Type: new Buffer('000b', 'hex'), Data: new Buffer('03000102', 'hex')},
+        { Type: new Buffer('000a', 'hex'), Data: new Buffer('00020017', 'hex')},
+        { Type: new Buffer('000d', 'hex'), Data: new Buffer('001e060106020603050105020503040104020403030103020303020102020203', 'hex')},
+        { Type: new Buffer('0016', 'hex'), Data: new Buffer(0)},
+        { Type: new Buffer('0017', 'hex'), Data: new Buffer(0)}
+      ]
+    }
+  };
+}
+
 exports.createServerHello = createServerHello;
 function createServerHello() {
   return { ContentType: new Buffer('16', 'hex'),
@@ -71,6 +96,33 @@ function createChangeCipherSpec() {
     ChangeCipherSpecMessage: new Buffer('01', 'hex')
   };
 }
+
+exports.createClientKeyExchange = createClientKeyExchange;
+function createClientKeyExchange() {
+  return { ContentType: new Buffer('16', 'hex'),
+           ProtocolVersion: new Buffer('0303', 'hex'),
+           Length: new Buffer('0046', 'hex'),
+           Handshake:
+           { HandshakeType: new Buffer('10', 'hex'),
+             Length: new Buffer('000042', 'hex'),
+             ECPublic: new Buffer('04af273855f9d93a5827c3aa168598b04d904a02b50ae9d13c05c0332c43ff0d4a9fd96c6c7af8a61e4bb788f8f2f09da693faec42a343449d4b70ed4336208794', 'hex')
+           }
+         };
+}
+
+
+exports.createClientFinished = createClientFinished;
+function createClientFinished() {
+  return { ContentType: new Buffer('16', 'hex'),
+           ProtocolVersion: new Buffer('0303', 'hex'),
+           Length: new Buffer('0010', 'hex'),
+           Handshake:
+           { HandshakeType: new Buffer('14', 'hex'),
+             Length: new Buffer('00000c', 'hex'),
+             VerifyData: new Buffer('e6dbb0f3db2ccb11fb86e9f5', 'hex')}
+         };
+}
+
 
 exports.createServerFinished = createServerFinished;
 function createServerFinished() {
