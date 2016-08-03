@@ -18,5 +18,8 @@
   "bugs": {
     "url": "https://github.com/shigeki/seccamp2016-tls-exercise/issues"
   },
-  "homepage": "https://github.com/shigeki/seccamp2016-tls-exercise#readme"
+  "homepage": "https://github.com/shigeki/seccamp2016-tls-exercise#readme",
+  "dependencies": {
+    "asn1.js-rfc5280": "^1.0.3"
+  }
 }
