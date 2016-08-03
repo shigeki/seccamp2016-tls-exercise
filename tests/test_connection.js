@@ -1,11 +1,12 @@
 const assert = require('assert');
 const EventEmitter = require('events');
 const util = require('util');
+const fs = require('fs');
 const TLS = require('../lib/tls.js').TLS;
 const Sample1 = require('./sample_data.js').Sample;
 const Sample2 = require('./sample_data2.js').Sample;
 const Connection = require('../lib/connection.js').Connection;
-
+const privatekey = fs.readFileSync('/home/ohtsu/tmp/cert/iijplus//iijplus.jp.key');
 function Test(Sample) {
   describe('TLS Server State', function() {
     it('TLS_ST_BEFORE=>TLS_ST_OK', function() {
@@ -23,6 +24,7 @@ function Test(Sample) {
                              Sample.ClientEncryptedApplicationData[1]
                             ];
       var connection = new Connection(true, true);
+      connection.setPrivateKey(privatekey);
       connection.key_block = {
         client_write_key: Sample.ClientWriteKey,
         server_write_key: Sample.ServerWriteKey,
@@ -70,6 +72,7 @@ function Test(Sample) {
                              Sample.ServerEncryptedApplicationData[0]
                             ];
       var connection = new Connection(false, true);
+      connection.setPrivateKey(privatekey);
       connection.key_block = {
         client_write_key: Sample.ClientWriteKey,
         server_write_key: Sample.ServerWriteKey,
@@ -101,9 +104,10 @@ function Test(Sample) {
       ConnectionRead();
     });
   });
-  describe('Handshake', function() {
+  describe.only('Handshake', function() {
     it('Handshake', function() {
       var server_connection = new Connection(true);
+      server_connection.setPrivateKey(privatekey);
       server_connection.setCertificates(require('../lib/stub_cert_data.js').Certificates);
       var hello_request_obj = server_connection.frame_creator.createHelloRequest(server_connection);
       var hello_request_buf = TLS.Handshake.HelloRequest.encode(hello_request_obj);
