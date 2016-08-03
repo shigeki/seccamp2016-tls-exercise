@@ -30,6 +30,7 @@ function Test(Sample) {
         server_write_iv: Sample.ServerWriteIV
       };
       connection.pre_master_secret = Sample.PreMasterSecret;
+      connection.master_secret = Sample.MasterSecret;
       connection.on('error', function(e) {
         console.log(e);
       });
@@ -76,6 +77,7 @@ function Test(Sample) {
         server_write_iv: Sample.ServerWriteIV
       };
       connection.pre_master_secret = Sample.PreMasterSecret;
+      connection.master_secret = Sample.MasterSecret;
       connection.on('error', function(e) {
         console.log(e);
       });
