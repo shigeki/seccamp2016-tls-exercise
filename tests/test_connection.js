@@ -104,7 +104,7 @@ function Test(Sample) {
       ConnectionRead();
     });
   });
-  describe.only('Handshake', function() {
+  describe('Handshake', function() {
     it('Handshake', function() {
       var server_connection = new Connection(true);
       server_connection.setPrivateKey(privatekey);
