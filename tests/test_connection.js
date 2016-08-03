@@ -5,20 +5,6 @@ const TLS = require('../lib/tls.js').TLS;
 const Sample1 = require('./sample_data.js').Sample;
 const Sample2 = require('./sample_data2.js').Sample;
 const Connection = require('../lib/connection.js').Connection;
-const Dummy = require('./dummy_create_frame.js');
-
-function addDummy(connection) {
-  connection.createClientHello = Dummy.createClientHello;
-  connection.createServerHello = Dummy.createServerHello;
-  connection.createCertificate = Dummy.createCertificate;
-  connection.createServerKeyExchange = Dummy.createServerKeyExchange;
-  connection.createServerHelloDone = Dummy.createServerHelloDone;
-  connection.createChangeCipherSpec = Dummy.createChangeCipherSpec;
-  connection.createClientKeyExchange = Dummy.createClientKeyExchange;
-  connection.createClientFinished = Dummy.createClientFinished;
-  connection.createServerFinished = Dummy.createServerFinished;
-}
-
 
 function Test(Sample) {
   describe('TLS Server State', function() {
@@ -36,8 +22,7 @@ function Test(Sample) {
                              Sample.ClientEncryptedApplicationData[0],
                              Sample.ClientEncryptedApplicationData[1]
                             ];
-      var connection = new Connection(true);
-      addDummy(connection);
+      var connection = new Connection(true, true);
       connection.client_write_key = Sample.ClientWriteKey;
       connection.server_write_key = Sample.ServerWriteKey;
       connection.client_write_iv = Sample.ClientWriteIV;
@@ -80,8 +65,7 @@ function Test(Sample) {
                              Sample.ServerFinished,
                              Sample.ServerEncryptedApplicationData[0]
                             ];
-      var connection = new Connection(false);
-      addDummy(connection);
+      var connection = new Connection(false, true);
       connection.client_write_key = Sample.ClientWriteKey;
       connection.server_write_key = Sample.ServerWriteKey;
       connection.client_write_iv = Sample.ClientWriteIV;
@@ -109,19 +93,19 @@ function Test(Sample) {
       ConnectionRead();
     });
   });
-  describe.skip('ClientTest', function() {
+  describe('ClientTest', function() {
     var client_connection = new Connection(false);
-    var client_hello_obj = client_connection.createClientHello();
+    var client_hello_obj = client_connection.frame_creator.createClientHello(client_connection);
     var client_hello_buf = TLS.Handshake.ClientHello.encode(client_hello_obj);
     var server_connection = new Connection(true);
-    server_connection.setCertificates(require('./cert_data.js').Certificates);
-    server_connection.read(client_hello_buf, function(e) {
-      var client_key_exchange_obj = client_connection.createClientKeyExchange();
+    server_connection.setCertificates(require('../lib/stub_cert_data.js').Certificates);
+    server_connection.read(client_hello_buf, function(e, conn) {
+      var client_key_exchange_obj = client_connection.frame_creator.createClientKeyExchange(conn);
       var client_key_exchange_buf = TLS.Handshake.ClientKeyExchange.encode(client_key_exchange_obj);
-      server_connection.read(client_key_exchange_buf, function(e) {
+      server_connection.read(client_key_exchange_buf, function(e, conn) {
         var change_cipher_spec_buf = TLS.ChangeCipherSpec.encode();
-        server_connection.read(change_cipher_spec_buf, function(e) {
-          var client_finished_obj = client_connection.createClientFinished();
+        server_connection.read(change_cipher_spec_buf, function(e, conn) {
+          var client_finished_obj = client_connection.frame_creator.createClientFinished(client_connection);
 //          var client_finished_buf = TLS.Handshake.Finished.encode(client_finished_obj);
 //          server_connection.read(change_finished_buf, function(e) {
 //            console.log('DONE');
