@@ -13,10 +13,8 @@ server.on('connection', function(s) {
   connection.setPrivateKey(privatekey);
   connection.setCertificates(require('../../lib/stub_cert_data.js').Certificates);
   connection.on('rawFrame', function(frame, type) {
-    console.log('rawFrame', type, frame);
   });
   connection.on('frame', function(frame, type) {
-    console.log('frame write', type, frame);
     s.write(frame);
   });
 
