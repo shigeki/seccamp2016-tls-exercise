@@ -3,10 +3,11 @@ const DataReader = require('../../lib/data_reader.js').DataReader;
 const Connection = require('../../lib/connection.js').Connection;
 const TLS = require('../../lib/tls.js').TLS;
 const fs = require('fs');
-const privatekey = fs.readFileSync('/home/ohtsu/tmp/cert/iijplus/iijplus.jp.key');
+const privatekey = fs.readFileSync('./self_signed_server.key');
+const server_cert = [fs.readFileSync('./self_signed_server.der')];
 var connection = new Connection(true);
 connection.setPrivateKey(privatekey);
-connection.setCertificates(require('../../lib/stub_cert_data.js').Certificates);
+connection.setCertificates(server_cert);
 const rl = readline.createInterface(process.stdin, process.stdout);
 
 rl.setPrompt('TLS Server> ');
