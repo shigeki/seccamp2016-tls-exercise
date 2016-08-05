@@ -13,10 +13,6 @@ client.on('error', function(e) {
 });
 var connection = new Connection(false);
 client.on('connect', function(s) {
-  connection.on('frame', function(frame, type) {
-    client.write(frame);
-  });
-
   var remaining_buffer = [];
   client.on('data', function(buf) {
     if (remaining_buffer.length > 0) {
@@ -62,9 +58,27 @@ client.on('connect', function(s) {
 });
 
 connection.on('frame', function(frame, type) {
-  if (type === 'ClientHello')
     client.write(frame);
 });
+connection.on('clearText', function(buf) {
+  console.log(buf.toString());
+});
+
+process.stdin.setEncoding('utf8');
+
+process.stdin.on('data', function(input) {
+    var obj = {
+      ContentType: new Buffer('17', 'hex'),
+      ProtocolVersion: connection.version,
+      Length: null,
+      ApplicationData: {
+        Plaintext:  new Buffer(input, 'utf8')
+      }
+    };
+  var frame = TLS.UnencryptedApplicationData.encode(obj);
+  connection.write(frame);
+});
+
 var hello_request_obj = connection.frame_creator.createHelloRequest(connection);
 var hello_request_buf = TLS.Handshake.HelloRequest.encode(hello_request_obj);
 connection.read(hello_request_buf);

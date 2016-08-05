@@ -1,5 +1,6 @@
 const DataReader = require('../../lib/data_reader.js').DataReader;
 const Connection = require('../../lib/connection.js').Connection;
+const TLS = require('../../lib/tls.js').TLS;
 const net = require('net');
 const fs = require('fs');
 const privatekey = fs.readFileSync('/home/ohtsu/tmp/cert/iijplus/iijplus.jp.key');
@@ -12,12 +13,23 @@ server.on('connection', function(s) {
   var connection = new Connection(true);
   connection.setPrivateKey(privatekey);
   connection.setCertificates(require('../../lib/stub_cert_data.js').Certificates);
-  connection.on('rawFrame', function(frame, type) {
-  });
+
   connection.on('frame', function(frame, type) {
     s.write(frame);
   });
-
+  connection.on('clearText', function(buf) {
+    console.log('clearText', buf.toString());
+    var obj = {
+      ContentType: new Buffer('17', 'hex'),
+      ProtocolVersion: connection.version,
+      Length: null,
+      ApplicationData: {
+        Plaintext:  buf
+      }
+    };
+    var frame = TLS.UnencryptedApplicationData.encode(obj);
+    connection.write(frame);
+  });
   var remaining_buffer = [];
   s.on('data', function(buf) {
     if (remaining_buffer.length > 0) {
